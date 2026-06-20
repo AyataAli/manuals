@@ -2,432 +2,218 @@
 <html lang="tr">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Manuals PDF Arşivi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>manuals</title>
   <style>
-    :root {
-      --bg: #0b1020;
-      --panel: #131a2a;
-      --panel-2: #1a2338;
-      --text: #edf2ff;
-      --muted: #a8b3cf;
-      --line: #2a3550;
-      --accent: #79a8ff;
-      --accent-2: #8ef0c7;
-      --danger: #ff7a7a;
-      --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
-      --radius: 16px;
-    }
-
     * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: linear-gradient(180deg, #0b1020, #0f172a); color: var(--text); font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    a { color: inherit; text-decoration: none; }
-    button, input, select { font: inherit; }
 
-    .container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .hero {
-      display: grid;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .title {
+    body {
       margin: 0;
-      font-size: clamp(28px, 4vw, 42px);
-      line-height: 1.1;
-      letter-spacing: -0.02em;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+      color: #222;
     }
 
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
+    .wrap {
       max-width: 900px;
-    }
-
-    .toolbar {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 12px;
-      margin: 20px 0 18px;
-    }
-
-    .search,
-    .select,
-    .btn {
-      height: 44px;
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      color: var(--text);
-    }
-
-    .search,
-    .select {
-      width: 100%;
-      padding: 0 14px;
-      outline: none;
-    }
-
-    .search:focus,
-    .select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(121, 168, 255, 0.12);
-    }
-
-    .btn {
+      margin: 40px auto;
       padding: 0 16px;
-      cursor: pointer;
-      transition: 0.18s ease;
-      white-space: nowrap;
     }
 
-    .btn:hover {
-      border-color: var(--accent);
-      transform: translateY(-1px);
+    h1 {
+      margin: 0 0 20px;
+      font-size: 28px;
+      font-weight: 600;
     }
 
-    .btn.primary {
-      background: linear-gradient(180deg, #2c62d6, #234fae);
-      border-color: #2c62d6;
-    }
-
-    .btn.ghost {
-      background: transparent;
-    }
-
-    .stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 36px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.03);
-      color: var(--muted);
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 18px;
-      align-items: start;
+    .search {
+      width: 100%;
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
     }
 
     .panel {
-      background: rgba(19, 26, 42, 0.8);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-
-    .panel-header {
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .panel-title {
-      margin: 0;
-      font-size: 16px;
-    }
-
-    .folders {
-      padding: 12px;
-      max-height: calc(100vh - 260px);
-      overflow: auto;
-    }
-
-    .folder-btn {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid transparent;
-      border-radius: 12px;
-      background: transparent;
-      color: var(--text);
-      cursor: pointer;
-      text-align: left;
-    }
-
-    .folder-btn:hover {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: var(--line);
-    }
-
-    .folder-btn.active {
-      background: rgba(121, 168, 255, 0.12);
-      border-color: rgba(121, 168, 255, 0.35);
-    }
-
-    .folder-name {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .folder-count {
-      color: var(--muted);
-      flex: 0 0 auto;
-    }
-
-    .table-wrap {
-      overflow: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 760px;
     }
 
     th, td {
       padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-      vertical-align: middle;
+      border-bottom: 1px solid #eee;
+      text-align: left;
     }
 
     th {
-      position: sticky;
-      top: 0;
-      background: var(--panel);
-      text-align: left;
-      color: var(--muted);
+      background: #fafafa;
       font-weight: 600;
-      z-index: 1;
     }
 
-    tbody tr:hover {
-      background: rgba(255, 255, 255, 0.025);
+    tr:last-child td {
+      border-bottom: 0;
     }
 
-    .pdf-link {
-      color: var(--text);
-      font-weight: 600;
-      display: inline-flex;
-      gap: 8px;
-      align-items: center;
+    a.file-link {
+      color: #222;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
     }
 
-    .pdf-link:hover {
-      color: var(--accent-2);
+    a.file-link:hover {
+      text-decoration: underline;
     }
 
-    .download-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 96px;
-      height: 36px;
-      padding: 0 12px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--panel-2);
+    a.download-link {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #222;
+      background: #fff;
     }
 
-    .download-link:hover {
-      border-color: var(--accent);
+    a.download-link:hover {
+      background: #f3f3f3;
     }
 
-    .muted {
-      color: var(--muted);
-    }
-
-    .empty,
-    .loading,
-    .error {
-      padding: 24px 18px;
-      color: var(--muted);
-    }
-
-    .error {
-      color: #ffd0d0;
+    .message {
+      padding: 18px 16px;
+      color: #666;
     }
 
     .modal {
       position: fixed;
       inset: 0;
       display: none;
-      place-items: center;
+      align-items: center;
+      justify-content: center;
       padding: 20px;
-      background: rgba(4, 7, 16, 0.72);
-      z-index: 1000;
+      background: rgba(0, 0, 0, 0.55);
     }
 
     .modal.open {
-      display: grid;
+      display: flex;
     }
 
-    .modal-card {
-      width: min(1200px, 100%);
-      height: min(92vh, 900px);
-      display: grid;
-      grid-template-rows: auto 1fr;
-      border-radius: 20px;
+    .modal-box {
+      width: min(1000px, 100%);
+      height: min(90vh, 800px);
+      background: #fff;
+      border-radius: 10px;
       overflow: hidden;
-      background: #0f172a;
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: 56px 1fr;
     }
 
-    .modal-head {
+    .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-      background: #111827;
+      padding: 0 16px;
+      border-bottom: 1px solid #eee;
     }
 
     .modal-title {
-      margin: 0;
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     .modal-actions {
       display: flex;
-      align-items: center;
       gap: 8px;
-      flex: 0 0 auto;
+      align-items: center;
     }
 
-    .viewer {
+    .btn {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      background: #fff;
+      color: #222;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #f3f3f3;
+    }
+
+    iframe {
       width: 100%;
       height: 100%;
       border: 0;
-      background: #0b1020;
     }
 
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 980px) {
-      .layout {
-        grid-template-columns: 1fr;
+    @media (max-width: 640px) {
+      .wrap {
+        margin: 20px auto;
       }
 
-      .folders {
-        max-height: none;
-      }
-    }
-
-    @media (max-width: 720px) {
-      .container {
-        padding: 16px;
+      h1 {
+        font-size: 24px;
       }
 
-      .toolbar {
-        grid-template-columns: 1fr;
+      table {
+        font-size: 14px;
       }
 
-      .panel-header {
-        flex-direction: column;
-        align-items: stretch;
+      th:nth-child(1),
+      td:nth-child(1) {
+        display: none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="hero">
-      <h1 class="title">Manuals PDF Arşivi</h1>
-      <p class="subtitle">
-        Dosya adına tıklayınca görüntüleyici açılır. İndir butonuyla doğrudan PDF indirilebilir.
-      </p>
-    </header>
+  <div class="wrap">
+    <h1>manuals</h1>
+    <input id="searchInput" class="search" type="search" placeholder="PDF ara..." />
 
-    <section class="stats" id="stats">
-      <span class="chip">Repo: <strong id="repoLabel">AyataAli/manuals</strong></span>
-      <span class="chip">Dal: <strong id="branchLabel">main</strong></span>
-      <span class="chip">Toplam PDF: <strong id="totalPdfCount">-</strong></span>
-      <span class="chip">Seçili klasör: <strong id="currentFolderLabel">Tümü</strong></span>
-    </section>
-
-    <section class="toolbar">
-      <input id="searchInput" class="search" type="search" placeholder="Dosya adı veya klasörde ara..." />
-      <select id="sortSelect" class="select" aria-label="Sırala">
-        <option value="name-asc">Ada göre (A-Z)</option>
-        <option value="name-desc">Ada göre (Z-A)</option>
-        <option value="size-desc">Boyuta göre (büyükten küçüğe)</option>
-        <option value="size-asc">Boyuta göre (küçükten büyüğe)</option>
-        <option value="path-asc">Klasöre göre</option>
-      </select>
-      <button id="zipButton" class="btn primary" type="button">ZIP indir</button>
-    </section>
-
-    <div class="layout">
-      <aside class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Klasörler</h2>
-          <span class="muted" id="folderCountLabel">Yükleniyor...</span>
-        </div>
-        <div class="folders" id="folders">
-          <div class="loading">Klasörler yükleniyor...</div>
-        </div>
-      </aside>
-
-      <main class="panel">
-        <div class="panel-header">
-          <h2 class="panel-title">PDF Listesi</h2>
-          <span class="muted" id="resultCountLabel">Yükleniyor...</span>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 72px;">No</th>
-                <th>Dosya</th>
-                <th style="width: 140px;">Klasör</th>
-                <th style="width: 120px;">Boyut</th>
-                <th style="width: 120px;">İndir</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr>
-                <td colspan="5" class="loading">PDF listesi yükleniyor...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </main>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 70px;">No</th>
+            <th>Dosya</th>
+            <th style="width: 120px;">İndir</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="3" class="message">Yükleniyor...</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-  <div id="modal" class="modal" aria-hidden="true">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h3 id="modalTitle" class="modal-title">PDF</h3>
+  <div id="modal" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div id="modalTitle" class="modal-title">PDF</div>
         <div class="modal-actions">
-          <a id="modalOpenNew" class="download-link" href="#" target="_blank" rel="noreferrer">Yeni sekme</a>
-          <a id="modalDownload" class="download-link" href="#" download>İndir</a>
-          <button id="modalClose" class="btn ghost" type="button">Kapat</button>
+          <a id="openNewTab" class="btn" href="#" target="_blank" rel="noreferrer">Yeni sekme</a>
+          <a id="downloadPdf" class="btn" href="#" download>İndir</a>
+          <button id="closeModal" class="btn" type="button">Kapat</button>
         </div>
       </div>
-      <iframe id="viewer" class="viewer" title="PDF görüntüleyici"></iframe>
+      <iframe id="pdfViewer" title="PDF görüntüleyici"></iframe>
     </div>
   </div>
 
@@ -439,32 +225,18 @@
     };
 
     const state = {
-      allPdfs: [],
-      folders: [],
-      currentFolder: "",
-      search: "",
-      sort: "name-asc"
+      files: [],
+      search: ""
     };
 
-    const els = {
-      repoLabel: document.getElementById("repoLabel"),
-      branchLabel: document.getElementById("branchLabel"),
-      totalPdfCount: document.getElementById("totalPdfCount"),
-      currentFolderLabel: document.getElementById("currentFolderLabel"),
-      folderCountLabel: document.getElementById("folderCountLabel"),
-      resultCountLabel: document.getElementById("resultCountLabel"),
-      folders: document.getElementById("folders"),
-      tableBody: document.getElementById("tableBody"),
-      searchInput: document.getElementById("searchInput"),
-      sortSelect: document.getElementById("sortSelect"),
-      zipButton: document.getElementById("zipButton"),
-      modal: document.getElementById("modal"),
-      modalTitle: document.getElementById("modalTitle"),
-      modalOpenNew: document.getElementById("modalOpenNew"),
-      modalDownload: document.getElementById("modalDownload"),
-      modalClose: document.getElementById("modalClose"),
-      viewer: document.getElementById("viewer")
-    };
+    const tableBody = document.getElementById("tableBody");
+    const searchInput = document.getElementById("searchInput");
+    const modal = document.getElementById("modal");
+    const modalTitle = document.getElementById("modalTitle");
+    const pdfViewer = document.getElementById("pdfViewer");
+    const openNewTab = document.getElementById("openNewTab");
+    const downloadPdf = document.getElementById("downloadPdf");
+    const closeModal = document.getElementById("closeModal");
 
     function escapeHtml(value) {
       return String(value)
@@ -475,290 +247,119 @@
         .replaceAll("'", "&#039;");
     }
 
-    function formatBytes(bytes) {
-      if (!Number.isFinite(bytes) || bytes < 0) return "—";
-      if (bytes === 0) return "0 B";
-      const units = ["B", "KB", "MB", "GB"];
-      const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-      const value = bytes / (1024 ** i);
-      return `${value.toFixed(value >= 100 || i === 0 ? 0 : 1)} ${units[i]}`;
+    function getRawUrl(fileName) {
+      return `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${encodeURIComponent(fileName)}`;
     }
 
-    function getFolderFromPath(path) {
-      const idx = path.lastIndexOf("/");
-      return idx === -1 ? "" : path.slice(0, idx);
-    }
-
-    function getFileName(path) {
-      const idx = path.lastIndexOf("/");
-      return idx === -1 ? path : path.slice(idx + 1);
-    }
-
-    function getRawUrl(path) {
-      return `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${encodeURI(path)}`;
-    }
-
-    function getZipUrl() {
-      return `https://github.com/${CONFIG.owner}/${CONFIG.repo}/archive/refs/heads/${CONFIG.branch}.zip`;
-    }
-
-    function compareBy(sortKey) {
-      return (a, b) => {
-        switch (sortKey) {
-          case "name-desc":
-            return getFileName(b.path).localeCompare(getFileName(a.path), "tr", { sensitivity: "base" });
-          case "size-desc":
-            return (b.size || 0) - (a.size || 0) || getFileName(a.path).localeCompare(getFileName(b.path), "tr", { sensitivity: "base" });
-          case "size-asc":
-            return (a.size || 0) - (b.size || 0) || getFileName(a.path).localeCompare(getFileName(b.path), "tr", { sensitivity: "base" });
-          case "path-asc":
-            return getFolderFromPath(a.path).localeCompare(getFolderFromPath(b.path), "tr", { sensitivity: "base" }) ||
-              getFileName(a.path).localeCompare(getFileName(b.path), "tr", { sensitivity: "base" });
-          case "name-asc":
-          default:
-            return getFileName(a.path).localeCompare(getFileName(b.path), "tr", { sensitivity: "base" });
-        }
-      };
-    }
-
-    function filterPdfs() {
-      const search = state.search.trim().toLocaleLowerCase("tr");
-      return state.allPdfs
-        .filter((item) => {
-          if (state.currentFolder && getFolderFromPath(item.path) !== state.currentFolder) {
-            return false;
-          }
-          if (!search) return true;
-          const haystack = `${item.path} ${getFileName(item.path)}`.toLocaleLowerCase("tr");
-          return haystack.includes(search);
-        })
-        .sort(compareBy(state.sort));
-    }
-
-    function buildFolderList(pdfs) {
-      const counts = new Map();
-      for (const item of pdfs) {
-        const folder = getFolderFromPath(item.path);
-        counts.set(folder, (counts.get(folder) || 0) + 1);
-      }
-
-      return [
-        { name: "", label: "Tümü", count: pdfs.length },
-        ...Array.from(counts.entries())
-          .sort((a, b) => a[0].localeCompare(b[0], "tr", { sensitivity: "base" }))
-          .map(([name, count]) => ({
-            name,
-            label: name || "Kök",
-            count
-          }))
-      ];
-    }
-
-    function renderFolders() {
-      if (!state.folders.length) {
-        els.folders.innerHTML = `<div class="empty">Klasör bulunamadı.</div>`;
-        els.folderCountLabel.textContent = "0 klasör";
-        return;
-      }
-
-      els.folderCountLabel.textContent = `${Math.max(0, state.folders.length - 1)} klasör`;
-
-      els.folders.innerHTML = state.folders.map((folder) => {
-        const active = folder.name === state.currentFolder ? "active" : "";
-        return `
-          <button
-            class="folder-btn ${active}"
-            type="button"
-            data-folder="${escapeHtml(folder.name)}"
-            title="${escapeHtml(folder.label)}"
-          >
-            <span class="folder-name">${escapeHtml(folder.label || "Kök")}</span>
-            <span class="folder-count">${folder.count}</span>
-          </button>
-        `;
-      }).join("");
-
-      for (const btn of els.folders.querySelectorAll("[data-folder]")) {
-        btn.addEventListener("click", () => {
-          state.currentFolder = btn.dataset.folder || "";
-          renderAll();
-        });
-      }
+    function getFilteredFiles() {
+      const query = state.search.trim().toLowerCase();
+      return state.files
+        .filter((file) => !query || file.name.toLowerCase().includes(query))
+        .sort((a, b) => a.name.localeCompare(b.name, "tr", { sensitivity: "base" }));
     }
 
     function renderTable() {
-      const list = filterPdfs();
-      const selectedLabel = state.currentFolder || "Tümü";
-      els.currentFolderLabel.textContent = selectedLabel;
-      els.resultCountLabel.textContent = `${list.length} sonuç`;
+      const files = getFilteredFiles();
 
-      if (!list.length) {
-        els.tableBody.innerHTML = `
+      if (!files.length) {
+        tableBody.innerHTML = `
           <tr>
-            <td colspan="5" class="empty">Sonuç bulunamadı.</td>
+            <td colspan="3" class="message">PDF bulunamadı.</td>
           </tr>
         `;
         return;
       }
 
-      els.tableBody.innerHTML = list.map((item, index) => {
-        const fileName = getFileName(item.path);
-        const folder = getFolderFromPath(item.path) || "Kök";
-        const rawUrl = getRawUrl(item.path);
+      tableBody.innerHTML = files.map((file, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>
+            <a href="#" class="file-link" data-file="${escapeHtml(file.name)}">${escapeHtml(file.name)}</a>
+          </td>
+          <td>
+            <a
+              class="download-link"
+              href="${getRawUrl(file.name)}"
+              download="${escapeHtml(file.name)}"
+              target="_blank"
+              rel="noreferrer"
+            >İndir</a>
+          </td>
+        </tr>
+      `).join("");
 
-        return `
-          <tr>
-            <td>${index + 1}</td>
-            <td>
-              <a
-                href="#"
-                class="pdf-link"
-                data-open-pdf="${escapeHtml(item.path)}"
-                title="${escapeHtml(fileName)}"
-              >
-                <span>📄</span>
-                <span>${escapeHtml(fileName)}</span>
-              </a>
-            </td>
-            <td class="muted" title="${escapeHtml(folder)}">${escapeHtml(folder)}</td>
-            <td>${formatBytes(item.size)}</td>
-            <td>
-              <a
-                class="download-link"
-                href="${rawUrl}"
-                download="${escapeHtml(fileName)}"
-                target="_blank"
-                rel="noreferrer"
-              >
-                İndir
-              </a>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-      for (const link of els.tableBody.querySelectorAll("[data-open-pdf]")) {
+      tableBody.querySelectorAll("[data-file]").forEach((link) => {
         link.addEventListener("click", (event) => {
           event.preventDefault();
-          openPdf(link.dataset.openPdf);
+          openPdf(link.dataset.file);
         });
-      }
+      });
     }
 
-    function renderAll() {
-      renderFolders();
-      renderTable();
-    }
-
-    function openPdf(path) {
-      const rawUrl = getRawUrl(path);
-      const fileName = getFileName(path);
-
-      els.modalTitle.textContent = fileName;
-      els.modalOpenNew.href = rawUrl;
-      els.modalDownload.href = rawUrl;
-      els.modalDownload.setAttribute("download", fileName);
-      els.viewer.src = rawUrl;
-      els.modal.classList.add("open");
-      els.modal.setAttribute("aria-hidden", "false");
+    function openPdf(fileName) {
+      const url = getRawUrl(fileName);
+      modalTitle.textContent = fileName;
+      pdfViewer.src = url;
+      openNewTab.href = url;
+      downloadPdf.href = url;
+      downloadPdf.setAttribute("download", fileName);
+      modal.classList.add("open");
       document.body.style.overflow = "hidden";
     }
 
     function closePdf() {
-      els.modal.classList.remove("open");
-      els.modal.setAttribute("aria-hidden", "true");
-      els.viewer.src = "";
+      modal.classList.remove("open");
+      pdfViewer.src = "";
       document.body.style.overflow = "";
     }
 
-    async function fetchTree() {
-      const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${CONFIG.branch}?recursive=1`;
-      const response = await fetch(url, {
-        headers: {
-          "Accept": "application/vnd.github+json"
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`GitHub API hatası: ${response.status}`);
-      }
-
-      const data = await response.json();
-      if (!Array.isArray(data.tree)) {
-        throw new Error("Repo ağacı okunamadı.");
-      }
-
-      return data.tree;
-    }
-
-    async function init() {
-      els.repoLabel.textContent = `${CONFIG.owner}/${CONFIG.repo}`;
-      els.branchLabel.textContent = CONFIG.branch;
-      els.zipButton.href = getZipUrl();
-
-      els.zipButton.addEventListener("click", () => {
-        window.open(getZipUrl(), "_blank", "noreferrer");
-      });
-
-      els.searchInput.addEventListener("input", (event) => {
-        state.search = event.target.value || "";
-        renderTable();
-      });
-
-      els.sortSelect.addEventListener("change", (event) => {
-        state.sort = event.target.value || "name-asc";
-        renderTable();
-      });
-
-      els.modalClose.addEventListener("click", closePdf);
-      els.modal.addEventListener("click", (event) => {
-        if (event.target === els.modal) closePdf();
-      });
-
-      window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && els.modal.classList.contains("open")) {
-          closePdf();
-        }
-      });
-
+    async function loadFiles() {
       try {
-        const tree = await fetchTree();
-        const pdfs = tree
-          .filter((item) =>
+        const response = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents`);
+        if (!response.ok) {
+          throw new Error(`GitHub API hatası: ${response.status}`);
+        }
+
+        const data = await response.json();
+        state.files = data.filter(
+          (item) =>
             item &&
-            item.type === "blob" &&
-            typeof item.path === "string" &&
-            item.path.toLowerCase().endsWith(".pdf")
-          )
-          .map((item) => ({
-            path: item.path,
-            size: Number(item.size) || 0
-          }));
+            item.type === "file" &&
+            typeof item.name === "string" &&
+            item.name.toLowerCase().endsWith(".pdf")
+        );
 
-        state.allPdfs = pdfs;
-        state.folders = buildFolderList(pdfs);
-
-        els.totalPdfCount.textContent = String(pdfs.length);
-
-        renderAll();
+        renderTable();
       } catch (error) {
         console.error(error);
-
-        els.folders.innerHTML = `<div class="error">Klasörler yüklenemedi.</div>`;
-        els.tableBody.innerHTML = `
+        tableBody.innerHTML = `
           <tr>
-            <td colspan="5" class="error">
-              Veri alınamadı. Repo adı, branch adı veya GitHub API erişimi kontrol edilmeli.
-            </td>
+            <td colspan="3" class="message">PDF listesi yüklenemedi.</td>
           </tr>
         `;
-        els.totalPdfCount.textContent = "0";
-        els.folderCountLabel.textContent = "Hata";
-        els.resultCountLabel.textContent = "Hata";
       }
     }
 
-    init();
+    searchInput.addEventListener("input", (event) => {
+      state.search = event.target.value || "";
+      renderTable();
+    });
+
+    closeModal.addEventListener("click", closePdf);
+
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) {
+        closePdf();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closePdf();
+      }
+    });
+
+    loadFiles();
   </script>
 </body>
 </html>
