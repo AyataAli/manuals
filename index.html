@@ -16,20 +16,14 @@
 
     .wrap {
       max-width: 900px;
-      margin: 40px auto;
+      margin: 32px auto;
       padding: 0 16px;
-    }
-
-    h1 {
-      margin: 0 0 20px;
-      font-size: 28px;
-      font-weight: 600;
     }
 
     .search {
       width: 100%;
       padding: 12px 14px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 14px;
@@ -67,7 +61,6 @@
       color: #222;
       text-decoration: none;
       font-weight: 500;
-      cursor: pointer;
     }
 
     a.file-link:hover {
@@ -161,20 +154,8 @@
     }
 
     @media (max-width: 640px) {
-      .wrap {
-        margin: 20px auto;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      table {
-        font-size: 14px;
-      }
-
-      th:nth-child(1),
-      td:nth-child(1) {
+      th:first-child,
+      td:first-child {
         display: none;
       }
     }
@@ -182,7 +163,6 @@
 </head>
 <body>
   <div class="wrap">
-    <h1>manuals</h1>
     <input id="searchInput" class="search" type="search" placeholder="PDF ara..." />
 
     <div class="panel">
@@ -194,11 +174,7 @@
             <th style="width: 120px;">İndir</th>
           </tr>
         </thead>
-        <tbody id="tableBody">
-          <tr>
-            <td colspan="3" class="message">Yükleniyor...</td>
-          </tr>
-        </tbody>
+        <tbody id="tableBody"></tbody>
       </table>
     </div>
   </div>
@@ -218,16 +194,31 @@
   </div>
 
   <script>
-    const CONFIG = {
-      owner: "AyataAli",
-      repo: "manuals",
-      branch: "main"
-    };
+    const BASE_URL = "https://raw.githubusercontent.com/AyataAli/manuals/main/";
 
-    const state = {
-      files: [],
-      search: ""
-    };
+    const files = [
+      "Alcon Constellation 30c42a626e07ba541810c5c820146363f85d296dc2e186e5aaa6b1226b6e7f02.pdf",
+      "Alcon Constellation.pdf",
+      "Alcon Constellation1b5998f83d910ba2529d7c261794b60ef0952d928da432f70255e3e6c1b9eeb5.pdf",
+      "Alcon Constellation648d9720fc5e9090cd01dcb505d954daf3642e101d37265cf98d319ffa254562.pdf",
+      "Alcon Constellation89ab7f3dd9dd61e3e5bf207851810ea382c09dd16268524ebe87e43162182c37.pdf",
+      "Alcon Constellationb0f32fc60f0bb33e37ebd9430b461bbd5da9b9a12412204d33ea7d3783a1f87b.pdf",
+      "Alcon Constellationfe065e1cd5c2859aa4c26fc36d1c21cb7529e22cdccb01294ac5d7a569fef86f.pdf",
+      "CSO Sirius user-manual-sirius.pdf",
+      "CSO_Sirius_PPH.pdf",
+      "Huvitz-HRK-9000A-User-Manual.pdf",
+      "IOL Master 500 000000-1692-983-doks-tr-tr-310322.pdf",
+      "IOLmaster500 000000-1692-983-doks-en-my-300625.pdf",
+      "TOPCON DRI OCT-1 TRITON USER MANUAL 07b886.pdf",
+      "VISUMAX 800 Brochure EN.pdf",
+      "VISUMAX 800 Brochure TR.pdf",
+      "Zeıs IOL calc 000000-2616-198-doks-en-us-020823.pdf",
+      "en-cv-5000pro-topcon-brochure 2.pdf",
+      "topcon-cl-200-autolensometer_.pdf",
+      "topcon-trk1p-eng-1.pdf"
+    ];
+
+    const state = { search: "" };
 
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
@@ -248,20 +239,20 @@
     }
 
     function getRawUrl(fileName) {
-      return `https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${encodeURIComponent(fileName)}`;
+      return BASE_URL + fileName.split("/").map(encodeURIComponent).join("/");
     }
 
     function getFilteredFiles() {
-      const query = state.search.trim().toLowerCase();
-      return state.files
-        .filter((file) => !query || file.name.toLowerCase().includes(query))
-        .sort((a, b) => a.name.localeCompare(b.name, "tr", { sensitivity: "base" }));
+      const query = state.search.trim().toLocaleLowerCase("tr");
+      return files
+        .filter((name) => !query || name.toLocaleLowerCase("tr").includes(query))
+        .sort((a, b) => a.localeCompare(b, "tr", { sensitivity: "base" }));
     }
 
     function renderTable() {
-      const files = getFilteredFiles();
+      const filtered = getFilteredFiles();
 
-      if (!files.length) {
+      if (!filtered.length) {
         tableBody.innerHTML = `
           <tr>
             <td colspan="3" class="message">PDF bulunamadı.</td>
@@ -270,21 +261,11 @@
         return;
       }
 
-      tableBody.innerHTML = files.map((file, index) => `
+      tableBody.innerHTML = filtered.map((name, index) => `
         <tr>
           <td>${index + 1}</td>
-          <td>
-            <a href="#" class="file-link" data-file="${escapeHtml(file.name)}">${escapeHtml(file.name)}</a>
-          </td>
-          <td>
-            <a
-              class="download-link"
-              href="${getRawUrl(file.name)}"
-              download="${escapeHtml(file.name)}"
-              target="_blank"
-              rel="noreferrer"
-            >İndir</a>
-          </td>
+          <td><a href="#" class="file-link" data-file="${escapeHtml(name)}">${escapeHtml(name)}</a></td>
+          <td><a class="download-link" href="${getRawUrl(name)}" download target="_blank" rel="noreferrer">İndir</a></td>
         </tr>
       `).join("");
 
@@ -313,33 +294,6 @@
       document.body.style.overflow = "";
     }
 
-    async function loadFiles() {
-      try {
-        const response = await fetch(`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents`);
-        if (!response.ok) {
-          throw new Error(`GitHub API hatası: ${response.status}`);
-        }
-
-        const data = await response.json();
-        state.files = data.filter(
-          (item) =>
-            item &&
-            item.type === "file" &&
-            typeof item.name === "string" &&
-            item.name.toLowerCase().endsWith(".pdf")
-        );
-
-        renderTable();
-      } catch (error) {
-        console.error(error);
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="3" class="message">PDF listesi yüklenemedi.</td>
-          </tr>
-        `;
-      }
-    }
-
     searchInput.addEventListener("input", (event) => {
       state.search = event.target.value || "";
       renderTable();
@@ -348,18 +302,14 @@
     closeModal.addEventListener("click", closePdf);
 
     modal.addEventListener("click", (event) => {
-      if (event.target === modal) {
-        closePdf();
-      }
+      if (event.target === modal) closePdf();
     });
 
     window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        closePdf();
-      }
+      if (event.key === "Escape") closePdf();
     });
 
-    loadFiles();
+    renderTable();
   </script>
 </body>
 </html>
