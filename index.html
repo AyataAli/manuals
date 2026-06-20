@@ -15,7 +15,7 @@
     }
 
     .wrap {
-      max-width: 900px;
+      max-width: 980px;
       margin: 32px auto;
       padding: 0 16px;
     }
@@ -46,6 +46,7 @@
       padding: 14px 16px;
       border-bottom: 1px solid #eee;
       text-align: left;
+      vertical-align: middle;
     }
 
     th {
@@ -77,8 +78,14 @@
       background: #fff;
     }
 
-    a.download-link:hover {
+    a.download-link:hover,
+    .btn:hover {
       background: #f3f3f3;
+    }
+
+    .meta {
+      color: #666;
+      white-space: nowrap;
     }
 
     .message {
@@ -94,6 +101,7 @@
       justify-content: center;
       padding: 20px;
       background: rgba(0, 0, 0, 0.55);
+      z-index: 1000;
     }
 
     .modal.open {
@@ -101,8 +109,8 @@
     }
 
     .modal-box {
-      width: min(1000px, 100%);
-      height: min(90vh, 800px);
+      width: min(1100px, 100%);
+      height: min(92vh, 860px);
       background: #fff;
       border-radius: 10px;
       overflow: hidden;
@@ -120,6 +128,7 @@
     }
 
     .modal-title {
+      min-width: 0;
       font-size: 14px;
       font-weight: 600;
       white-space: nowrap;
@@ -131,6 +140,7 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      flex: 0 0 auto;
     }
 
     .btn {
@@ -143,17 +153,14 @@
       cursor: pointer;
     }
 
-    .btn:hover {
-      background: #f3f3f3;
-    }
-
     iframe {
       width: 100%;
       height: 100%;
       border: 0;
+      background: #fff;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 720px) {
       th:first-child,
       td:first-child {
         display: none;
@@ -171,10 +178,16 @@
           <tr>
             <th style="width: 70px;">No</th>
             <th>Dosya</th>
+            <th style="width: 90px;">Sayfa</th>
+            <th style="width: 110px;">Boyut</th>
             <th style="width: 120px;">İndir</th>
           </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="5" class="message">Yükleniyor...</td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </div>
@@ -193,8 +206,11 @@
     </div>
   </div>
 
-  <script>
-    const BASE_URL = "https://raw.githubusercontent.com/AyataAli/manuals/main/";
+  <script type="module">
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
 
     const files = [
       "Alcon Constellation 30c42a626e07ba541810c5c820146363f85d296dc2e186e5aaa6b1226b6e7f02.pdf",
@@ -218,7 +234,10 @@
       "topcon-trk1p-eng-1.pdf"
     ];
 
-    const state = { search: "" };
+    const state = {
+      search: "",
+      meta: new Map()
+    };
 
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
@@ -238,8 +257,15 @@
         .replaceAll("'", "&#039;");
     }
 
-    function getRawUrl(fileName) {
-      return BASE_URL + fileName.split("/").map(encodeURIComponent).join("/");
+    function fileUrl(fileName) {
+      return `./${fileName.split("/").map(encodeURIComponent).join("/")}`;
+    }
+
+    function formatBytes(bytes) {
+      if (!Number.isFinite(bytes)) return "-";
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 
     function getFilteredFiles() {
@@ -249,13 +275,23 @@
         .sort((a, b) => a.localeCompare(b, "tr", { sensitivity: "base" }));
     }
 
+    function getPages(fileName) {
+      const item = state.meta.get(fileName);
+      return item?.pages ?? "…";
+    }
+
+    function getSize(fileName) {
+      const item = state.meta.get(fileName);
+      return item?.sizeText ?? "…";
+    }
+
     function renderTable() {
       const filtered = getFilteredFiles();
 
       if (!filtered.length) {
         tableBody.innerHTML = `
           <tr>
-            <td colspan="3" class="message">PDF bulunamadı.</td>
+            <td colspan="5" class="message">PDF bulunamadı.</td>
           </tr>
         `;
         return;
@@ -264,8 +300,14 @@
       tableBody.innerHTML = filtered.map((name, index) => `
         <tr>
           <td>${index + 1}</td>
-          <td><a href="#" class="file-link" data-file="${escapeHtml(name)}">${escapeHtml(name)}</a></td>
-          <td><a class="download-link" href="${getRawUrl(name)}" download target="_blank" rel="noreferrer">İndir</a></td>
+          <td>
+            <a href="#" class="file-link" data-file="${escapeHtml(name)}">${escapeHtml(name)}</a>
+          </td>
+          <td class="meta">${escapeHtml(String(getPages(name)))}</td>
+          <td class="meta">${escapeHtml(String(getSize(name)))}</td>
+          <td>
+            <a class="download-link" href="${fileUrl(name)}" download="${escapeHtml(name)}">İndir</a>
+          </td>
         </tr>
       `).join("");
 
@@ -278,7 +320,7 @@
     }
 
     function openPdf(fileName) {
-      const url = getRawUrl(fileName);
+      const url = fileUrl(fileName);
       modalTitle.textContent = fileName;
       pdfViewer.src = url;
       openNewTab.href = url;
@@ -292,6 +334,36 @@
       modal.classList.remove("open");
       pdfViewer.src = "";
       document.body.style.overflow = "";
+    }
+
+    async function loadPdfMeta(fileName) {
+      try {
+        const url = fileUrl(fileName);
+
+        const [headResponse, pdfDoc] = await Promise.all([
+          fetch(url, { method: "HEAD" }),
+          pdfjsLib.getDocument(url).promise
+        ]);
+
+        const size = Number(headResponse.headers.get("content-length")) || null;
+
+        state.meta.set(fileName, {
+          pages: pdfDoc.numPages,
+          sizeText: size ? formatBytes(size) : "-"
+        });
+      } catch {
+        state.meta.set(fileName, {
+          pages: "-",
+          sizeText: "-"
+        });
+      }
+
+      renderTable();
+    }
+
+    async function loadAllMeta() {
+      renderTable();
+      await Promise.all(files.map(loadPdfMeta));
     }
 
     searchInput.addEventListener("input", (event) => {
@@ -309,7 +381,7 @@
       if (event.key === "Escape") closePdf();
     });
 
-    renderTable();
+    loadAllMeta();
   </script>
 </body>
 </html>
