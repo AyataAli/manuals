@@ -118,7 +118,7 @@
       border-radius: 10px;
       overflow: hidden;
       display: grid;
-      grid-template-rows: 56px 1fr 52px;
+      grid-template-rows: 56px 1fr;
     }
 
     .modal-header {
@@ -152,37 +152,29 @@
       padding: 16px;
     }
 
-    .viewer-inner {
-      width: fit-content;
-      margin: 0 auto;
+    .pdf-pages {
+      display: grid;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .pdf-page {
+      background: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+    }
+
+    .pdf-loading {
+      padding: 24px;
+      text-align: center;
+      color: #555;
+      background: #fff;
+      border-radius: 8px;
     }
 
     canvas {
       display: block;
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-    }
-
-    .modal-footer {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      border-top: 1px solid #eee;
-      padding: 0 12px;
-    }
-
-    .page-indicator {
-      min-width: 90px;
-      text-align: center;
-      color: #444;
-      font-size: 14px;
-    }
-
-    .btn[disabled] {
-      opacity: 0.5;
-      cursor: default;
-      pointer-events: none;
+      max-width: 100%;
+      height: auto;
     }
 
     @media (max-width: 720px) {
@@ -193,7 +185,6 @@
 
       .modal-box {
         height: 94vh;
-        grid-template-rows: auto 1fr 52px;
       }
 
       .modal-header {
@@ -243,16 +234,8 @@
         </div>
       </div>
 
-      <div class="viewer-wrap" id="viewerWrap">
-        <div class="viewer-inner">
-          <canvas id="pdfCanvas"></canvas>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button id="prevPage" class="btn" type="button">Önceki</button>
-        <div id="pageIndicator" class="page-indicator">1 / 1</div>
-        <button id="nextPage" class="btn" type="button">Sonraki</button>
+      <div id="viewerWrap" class="viewer-wrap">
+        <div id="pdfPages" class="pdf-pages"></div>
       </div>
     </div>
   </div>
@@ -288,11 +271,7 @@
     const state = {
       search: "",
       meta: new Map(),
-      pdfDoc: null,
-      currentPage: 1,
-      currentFile: "",
-      rendering: false,
-      pendingPage: null
+      renderToken: 0
     };
 
     const tableBody = document.getElementById("tableBody");
@@ -301,11 +280,8 @@
     const modalTitle = document.getElementById("modalTitle");
     const downloadPdf = document.getElementById("downloadPdf");
     const closeModal = document.getElementById("closeModal");
-    const prevPage = document.getElementById("prevPage");
-    const nextPage = document.getElementById("nextPage");
-    const pageIndicator = document.getElementById("pageIndicator");
-    const canvas = document.getElementById("pdfCanvas");
-    const ctx = canvas.getContext("2d");
+    const viewerWrap = document.getElementById("viewerWrap");
+    const pdfPages = document.getElementById("pdfPages");
 
     function escapeHtml(value) {
       return String(value)
@@ -376,46 +352,41 @@
       });
     }
 
-    function updatePager() {
-      const total = state.pdfDoc?.numPages || 1;
-      pageIndicator.textContent = `${state.currentPage} / ${total}`;
-      prevPage.disabled = state.currentPage <= 1;
-      nextPage.disabled = state.currentPage >= total;
+    function clearViewer() {
+      pdfPages.innerHTML = "";
+      viewerWrap.scrollTop = 0;
     }
 
-    async function renderPage(pageNumber) {
-      if (!state.pdfDoc) return;
+    function showLoading() {
+      pdfPages.innerHTML = `<div class="pdf-loading">PDF yükleniyor...</div>`;
+      viewerWrap.scrollTop = 0;
+    }
 
-      if (state.rendering) {
-        state.pendingPage = pageNumber;
-        return;
-      }
+    async function renderAllPages(pdfDoc, token) {
+      clearViewer();
 
-      state.rendering = true;
-      state.currentPage = pageNumber;
-      updatePager();
+      for (let pageNumber = 1; pageNumber <= pdfDoc.numPages; pageNumber += 1) {
+        if (token !== state.renderToken) return;
 
-      const page = await state.pdfDoc.getPage(pageNumber);
-      const initialViewport = page.getViewport({ scale: 1 });
+        const page = await pdfDoc.getPage(pageNumber);
+        const baseViewport = page.getViewport({ scale: 1 });
 
-      const maxWidth = Math.min(window.innerWidth - 80, 1000);
-      const scale = Math.max(0.8, maxWidth / initialViewport.width);
-      const viewport = page.getViewport({ scale });
+        const maxWidth = Math.min(viewerWrap.clientWidth - 32, 980);
+        const scale = Math.max(0.75, maxWidth / baseViewport.width);
+        const viewport = page.getViewport({ scale });
 
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
+        const canvas = document.createElement("canvas");
+        canvas.className = "pdf-page";
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
 
-      await page.render({
-        canvasContext: ctx,
-        viewport
-      }).promise;
+        const context = canvas.getContext("2d");
+        pdfPages.appendChild(canvas);
 
-      state.rendering = false;
-
-      if (state.pendingPage && state.pendingPage !== state.currentPage) {
-        const next = state.pendingPage;
-        state.pendingPage = null;
-        await renderPage(next);
+        await page.render({
+          canvasContext: context,
+          viewport
+        }).promise;
       }
     }
 
@@ -426,35 +397,26 @@
         downloadPdf.href = url;
         downloadPdf.setAttribute("download", fileName);
 
-        state.currentFile = fileName;
-        state.currentPage = 1;
-        state.pendingPage = null;
-
         modal.classList.add("open");
         document.body.style.overflow = "hidden";
+        showLoading();
 
-        const loadingTask = pdfjsLib.getDocument(url);
-        state.pdfDoc = await loadingTask.promise;
+        const token = ++state.renderToken;
+        const pdfDoc = await pdfjsLib.getDocument(url).promise;
 
-        updatePager();
-        await renderPage(1);
+        if (token !== state.renderToken) return;
+        await renderAllPages(pdfDoc, token);
       } catch (error) {
         console.error(error);
-        modal.classList.remove("open");
-        document.body.style.overflow = "";
-        alert("PDF açılamadı.");
+        pdfPages.innerHTML = `<div class="pdf-loading">PDF açılamadı.</div>`;
       }
     }
 
     function closePdfModal() {
+      state.renderToken += 1;
       modal.classList.remove("open");
       document.body.style.overflow = "";
-      state.pdfDoc = null;
-      state.currentPage = 1;
-      state.pendingPage = null;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.width = 0;
-      canvas.height = 0;
+      clearViewer();
     }
 
     async function loadPdfMeta(fileName) {
@@ -472,8 +434,7 @@
           pages: pdfDoc.numPages,
           sizeText: size ? formatBytes(size) : "-"
         });
-      } catch (error) {
-        console.error(error);
+      } catch {
         state.meta.set(fileName, {
           pages: "-",
           sizeText: "-"
@@ -499,32 +460,15 @@
       if (event.target === modal) closePdfModal();
     });
 
-    prevPage.addEventListener("click", async () => {
-      if (!state.pdfDoc || state.currentPage <= 1) return;
-      await renderPage(state.currentPage - 1);
-    });
-
-    nextPage.addEventListener("click", async () => {
-      if (!state.pdfDoc || state.currentPage >= state.pdfDoc.numPages) return;
-      await renderPage(state.currentPage + 1);
-    });
-
-    window.addEventListener("keydown", async (event) => {
-      if (!modal.classList.contains("open")) return;
-
+    window.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closePdfModal();
-      if (event.key === "ArrowLeft" && state.currentPage > 1) {
-        await renderPage(state.currentPage - 1);
-      }
-      if (event.key === "ArrowRight" && state.pdfDoc && state.currentPage < state.pdfDoc.numPages) {
-        await renderPage(state.currentPage + 1);
-      }
     });
 
     window.addEventListener("resize", async () => {
-      if (modal.classList.contains("open") && state.pdfDoc) {
-        await renderPage(state.currentPage);
-      }
+      if (!modal.classList.contains("open")) return;
+      const fileName = modalTitle.textContent;
+      if (!fileName) return;
+      await openPdf(fileName);
     });
 
     loadAllMeta();
