@@ -3,55 +3,129 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>manuals</title>
+  <title>Manuals PDF Arşivi</title>
   <style>
     * { box-sizing: border-box; }
+
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #0b1220;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --line: #243041;
+      --hover: #182233;
+      --accent: #2563eb;
+      --white: #ffffff;
+    }
 
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      color: #222;
+      background: linear-gradient(180deg, #0b1220, #111827);
+      color: var(--text);
     }
 
     .wrap {
-      max-width: 980px;
+      max-width: 1080px;
       margin: 32px auto;
       padding: 0 16px;
     }
 
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .zip-link,
+    .btn,
+    .download-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .zip-link:hover,
+    .btn:hover,
+    .download-link:hover {
+      background: var(--hover);
+    }
+
+    .note {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
     .search {
       width: 100%;
-      padding: 12px 14px;
+      height: 44px;
+      padding: 0 14px;
       margin-bottom: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
       font-size: 14px;
-      background: #fff;
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: var(--accent);
     }
 
     .panel {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 10px;
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 14px;
       overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 760px;
     }
 
     th, td {
       padding: 14px 16px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid var(--line);
       text-align: left;
       vertical-align: middle;
     }
 
     th {
-      background: #fafafa;
+      background: var(--panel);
+      color: var(--muted);
       font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
     }
 
     tr:last-child td {
@@ -59,9 +133,9 @@
     }
 
     .file-link {
-      color: #222;
+      color: var(--text);
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
     }
 
@@ -69,31 +143,14 @@
       text-decoration: underline;
     }
 
-    .download-link,
-    .btn {
-      display: inline-block;
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      text-decoration: none;
-      color: #222;
-      background: #fff;
-      cursor: pointer;
-    }
-
-    .download-link:hover,
-    .btn:hover {
-      background: #f3f3f3;
-    }
-
     .meta {
-      color: #666;
+      color: var(--muted);
       white-space: nowrap;
     }
 
     .message {
       padding: 18px 16px;
-      color: #666;
+      color: var(--muted);
     }
 
     .modal {
@@ -103,7 +160,7 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      background: rgba(0, 0, 0, 0.55);
+      background: rgba(0, 0, 0, 0.72);
       z-index: 1000;
     }
 
@@ -112,13 +169,14 @@
     }
 
     .modal-box {
-      width: min(1100px, 100%);
-      height: min(92vh, 900px);
-      background: #fff;
-      border-radius: 10px;
+      width: min(1180px, 100%);
+      height: min(94vh, 920px);
+      background: var(--white);
+      color: #111827;
+      border-radius: 14px;
       overflow: hidden;
       display: grid;
-      grid-template-rows: 56px 1fr;
+      grid-template-rows: 58px 1fr;
     }
 
     .modal-header {
@@ -127,7 +185,8 @@
       justify-content: space-between;
       gap: 12px;
       padding: 0 16px;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid #e5e7eb;
+      background: #ffffff;
     }
 
     .modal-title {
@@ -146,10 +205,18 @@
       flex: 0 0 auto;
     }
 
+    .modal .btn,
+    .modal .download-link {
+      min-height: 36px;
+      background: #ffffff;
+      color: #111827;
+      border-color: #d1d5db;
+    }
+
     .viewer-wrap {
       overflow: auto;
-      background: #d9d9d9;
-      padding: 16px;
+      background: #d1d5db;
+      padding: 18px;
     }
 
     .pdf-pages {
@@ -159,32 +226,32 @@
     }
 
     .pdf-page {
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+      display: block;
+      background: #ffffff;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.14);
     }
 
     .pdf-loading {
       padding: 24px;
       text-align: center;
-      color: #555;
-      background: #fff;
+      color: #4b5563;
+      background: #ffffff;
       border-radius: 8px;
+      min-width: 280px;
     }
 
-    canvas {
-      display: block;
-      max-width: 100%;
-      height: auto;
-    }
+    @media (max-width: 760px) {
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
 
-    @media (max-width: 720px) {
-      th:first-child,
-      td:first-child {
-        display: none;
+      h1 {
+        font-size: 24px;
       }
 
       .modal-box {
-        height: 94vh;
+        height: 95vh;
       }
 
       .modal-header {
@@ -202,25 +269,34 @@
 </head>
 <body>
   <div class="wrap">
+    <div class="topbar">
+      <h1>Manuals PDF Arşivi</h1>
+      <a class="zip-link" href="https://github.com/AyataAli/manuals/archive/refs/heads/main.zip">ZIP indir</a>
+    </div>
+
+    <p class="note">Dosya adına tıklayınca görüntüleyici açılır. Sağdaki butondan doğrudan indirebilirsiniz.</p>
+
     <input id="searchInput" class="search" type="search" placeholder="PDF ara..." />
 
     <div class="panel">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 70px;">No</th>
-            <th>Dosya</th>
-            <th style="width: 90px;">Sayfa</th>
-            <th style="width: 110px;">Boyut</th>
-            <th style="width: 120px;">İndir</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr>
-            <td colspan="5" class="message">Yükleniyor...</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 70px;">No</th>
+              <th>Dosya</th>
+              <th style="width: 90px;">Sayfa</th>
+              <th style="width: 110px;">Boyut</th>
+              <th style="width: 120px;">İndir</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="5" class="message">PDF listesi yükleniyor...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -229,7 +305,7 @@
       <div class="modal-header">
         <div id="modalTitle" class="modal-title">PDF</div>
         <div class="modal-actions">
-          <a id="downloadPdf" class="btn" href="#" download>İndir</a>
+          <a id="downloadPdf" class="download-link" href="#" download>İndir</a>
           <button id="closeModal" class="btn" type="button">Kapat</button>
         </div>
       </div>
@@ -271,7 +347,8 @@
     const state = {
       search: "",
       meta: new Map(),
-      renderToken: 0
+      renderToken: 0,
+      currentFile: ""
     };
 
     const tableBody = document.getElementById("tableBody");
@@ -370,7 +447,6 @@
 
         const page = await pdfDoc.getPage(pageNumber);
         const baseViewport = page.getViewport({ scale: 1 });
-
         const maxWidth = Math.min(viewerWrap.clientWidth - 32, 980);
         const scale = Math.max(0.75, maxWidth / baseViewport.width);
         const viewport = page.getViewport({ scale });
@@ -393,6 +469,7 @@
     async function openPdf(fileName) {
       try {
         const url = fileUrl(fileName);
+        state.currentFile = fileName;
         modalTitle.textContent = fileName;
         downloadPdf.href = url;
         downloadPdf.setAttribute("download", fileName);
@@ -417,6 +494,7 @@
       modal.classList.remove("open");
       document.body.style.overflow = "";
       clearViewer();
+      state.currentFile = "";
     }
 
     async function loadPdfMeta(fileName) {
@@ -434,7 +512,8 @@
           pages: pdfDoc.numPages,
           sizeText: size ? formatBytes(size) : "-"
         });
-      } catch {
+      } catch (error) {
+        console.error(error);
         state.meta.set(fileName, {
           pages: "-",
           sizeText: "-"
@@ -465,10 +544,8 @@
     });
 
     window.addEventListener("resize", async () => {
-      if (!modal.classList.contains("open")) return;
-      const fileName = modalTitle.textContent;
-      if (!fileName) return;
-      await openPdf(fileName);
+      if (!modal.classList.contains("open") || !state.currentFile) return;
+      await openPdf(state.currentFile);
     });
 
     loadAllMeta();
