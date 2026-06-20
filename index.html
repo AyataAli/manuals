@@ -58,17 +58,19 @@
       border-bottom: 0;
     }
 
-    a.file-link {
+    .file-link {
       color: #222;
       text-decoration: none;
       font-weight: 500;
+      cursor: pointer;
     }
 
-    a.file-link:hover {
+    .file-link:hover {
       text-decoration: underline;
     }
 
-    a.download-link {
+    .download-link,
+    .btn {
       display: inline-block;
       padding: 8px 12px;
       border: 1px solid #ccc;
@@ -76,9 +78,10 @@
       text-decoration: none;
       color: #222;
       background: #fff;
+      cursor: pointer;
     }
 
-    a.download-link:hover,
+    .download-link:hover,
     .btn:hover {
       background: #f3f3f3;
     }
@@ -110,12 +113,12 @@
 
     .modal-box {
       width: min(1100px, 100%);
-      height: min(92vh, 860px);
+      height: min(92vh, 900px);
       background: #fff;
       border-radius: 10px;
       overflow: hidden;
       display: grid;
-      grid-template-rows: 56px 1fr;
+      grid-template-rows: 56px 1fr 52px;
     }
 
     .modal-header {
@@ -143,27 +146,65 @@
       flex: 0 0 auto;
     }
 
-    .btn {
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      background: #fff;
-      color: #222;
-      text-decoration: none;
-      cursor: pointer;
+    .viewer-wrap {
+      overflow: auto;
+      background: #d9d9d9;
+      padding: 16px;
     }
 
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
+    .viewer-inner {
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    canvas {
+      display: block;
       background: #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+
+    .modal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border-top: 1px solid #eee;
+      padding: 0 12px;
+    }
+
+    .page-indicator {
+      min-width: 90px;
+      text-align: center;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .btn[disabled] {
+      opacity: 0.5;
+      cursor: default;
+      pointer-events: none;
     }
 
     @media (max-width: 720px) {
       th:first-child,
       td:first-child {
         display: none;
+      }
+
+      .modal-box {
+        height: 94vh;
+        grid-template-rows: auto 1fr 52px;
+      }
+
+      .modal-header {
+        padding: 10px 12px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .modal-actions {
+        width: 100%;
+        flex-wrap: wrap;
       }
     }
   </style>
@@ -197,12 +238,22 @@
       <div class="modal-header">
         <div id="modalTitle" class="modal-title">PDF</div>
         <div class="modal-actions">
-          <a id="openNewTab" class="btn" href="#" target="_blank" rel="noreferrer">Yeni sekme</a>
           <a id="downloadPdf" class="btn" href="#" download>İndir</a>
           <button id="closeModal" class="btn" type="button">Kapat</button>
         </div>
       </div>
-      <iframe id="pdfViewer" title="PDF görüntüleyici"></iframe>
+
+      <div class="viewer-wrap" id="viewerWrap">
+        <div class="viewer-inner">
+          <canvas id="pdfCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="prevPage" class="btn" type="button">Önceki</button>
+        <div id="pageIndicator" class="page-indicator">1 / 1</div>
+        <button id="nextPage" class="btn" type="button">Sonraki</button>
+      </div>
     </div>
   </div>
 
@@ -236,17 +287,25 @@
 
     const state = {
       search: "",
-      meta: new Map()
+      meta: new Map(),
+      pdfDoc: null,
+      currentPage: 1,
+      currentFile: "",
+      rendering: false,
+      pendingPage: null
     };
 
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
     const modal = document.getElementById("modal");
     const modalTitle = document.getElementById("modalTitle");
-    const pdfViewer = document.getElementById("pdfViewer");
-    const openNewTab = document.getElementById("openNewTab");
     const downloadPdf = document.getElementById("downloadPdf");
     const closeModal = document.getElementById("closeModal");
+    const prevPage = document.getElementById("prevPage");
+    const nextPage = document.getElementById("nextPage");
+    const pageIndicator = document.getElementById("pageIndicator");
+    const canvas = document.getElementById("pdfCanvas");
+    const ctx = canvas.getContext("2d");
 
     function escapeHtml(value) {
       return String(value)
@@ -275,14 +334,12 @@
         .sort((a, b) => a.localeCompare(b, "tr", { sensitivity: "base" }));
     }
 
-    function getPages(fileName) {
-      const item = state.meta.get(fileName);
-      return item?.pages ?? "…";
+    function getPages(name) {
+      return state.meta.get(name)?.pages ?? "…";
     }
 
-    function getSize(fileName) {
-      const item = state.meta.get(fileName);
-      return item?.sizeText ?? "…";
+    function getSize(name) {
+      return state.meta.get(name)?.sizeText ?? "…";
     }
 
     function renderTable() {
@@ -312,28 +369,92 @@
       `).join("");
 
       tableBody.querySelectorAll("[data-file]").forEach((link) => {
-        link.addEventListener("click", (event) => {
+        link.addEventListener("click", async (event) => {
           event.preventDefault();
-          openPdf(link.dataset.file);
+          await openPdf(link.dataset.file);
         });
       });
     }
 
-    function openPdf(fileName) {
-      const url = fileUrl(fileName);
-      modalTitle.textContent = fileName;
-      pdfViewer.src = url;
-      openNewTab.href = url;
-      downloadPdf.href = url;
-      downloadPdf.setAttribute("download", fileName);
-      modal.classList.add("open");
-      document.body.style.overflow = "hidden";
+    function updatePager() {
+      const total = state.pdfDoc?.numPages || 1;
+      pageIndicator.textContent = `${state.currentPage} / ${total}`;
+      prevPage.disabled = state.currentPage <= 1;
+      nextPage.disabled = state.currentPage >= total;
     }
 
-    function closePdf() {
+    async function renderPage(pageNumber) {
+      if (!state.pdfDoc) return;
+
+      if (state.rendering) {
+        state.pendingPage = pageNumber;
+        return;
+      }
+
+      state.rendering = true;
+      state.currentPage = pageNumber;
+      updatePager();
+
+      const page = await state.pdfDoc.getPage(pageNumber);
+      const initialViewport = page.getViewport({ scale: 1 });
+
+      const maxWidth = Math.min(window.innerWidth - 80, 1000);
+      const scale = Math.max(0.8, maxWidth / initialViewport.width);
+      const viewport = page.getViewport({ scale });
+
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+
+      await page.render({
+        canvasContext: ctx,
+        viewport
+      }).promise;
+
+      state.rendering = false;
+
+      if (state.pendingPage && state.pendingPage !== state.currentPage) {
+        const next = state.pendingPage;
+        state.pendingPage = null;
+        await renderPage(next);
+      }
+    }
+
+    async function openPdf(fileName) {
+      try {
+        const url = fileUrl(fileName);
+        modalTitle.textContent = fileName;
+        downloadPdf.href = url;
+        downloadPdf.setAttribute("download", fileName);
+
+        state.currentFile = fileName;
+        state.currentPage = 1;
+        state.pendingPage = null;
+
+        modal.classList.add("open");
+        document.body.style.overflow = "hidden";
+
+        const loadingTask = pdfjsLib.getDocument(url);
+        state.pdfDoc = await loadingTask.promise;
+
+        updatePager();
+        await renderPage(1);
+      } catch (error) {
+        console.error(error);
+        modal.classList.remove("open");
+        document.body.style.overflow = "";
+        alert("PDF açılamadı.");
+      }
+    }
+
+    function closePdfModal() {
       modal.classList.remove("open");
-      pdfViewer.src = "";
       document.body.style.overflow = "";
+      state.pdfDoc = null;
+      state.currentPage = 1;
+      state.pendingPage = null;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      canvas.width = 0;
+      canvas.height = 0;
     }
 
     async function loadPdfMeta(fileName) {
@@ -351,7 +472,8 @@
           pages: pdfDoc.numPages,
           sizeText: size ? formatBytes(size) : "-"
         });
-      } catch {
+      } catch (error) {
+        console.error(error);
         state.meta.set(fileName, {
           pages: "-",
           sizeText: "-"
@@ -371,14 +493,38 @@
       renderTable();
     });
 
-    closeModal.addEventListener("click", closePdf);
+    closeModal.addEventListener("click", closePdfModal);
 
     modal.addEventListener("click", (event) => {
-      if (event.target === modal) closePdf();
+      if (event.target === modal) closePdfModal();
     });
 
-    window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closePdf();
+    prevPage.addEventListener("click", async () => {
+      if (!state.pdfDoc || state.currentPage <= 1) return;
+      await renderPage(state.currentPage - 1);
+    });
+
+    nextPage.addEventListener("click", async () => {
+      if (!state.pdfDoc || state.currentPage >= state.pdfDoc.numPages) return;
+      await renderPage(state.currentPage + 1);
+    });
+
+    window.addEventListener("keydown", async (event) => {
+      if (!modal.classList.contains("open")) return;
+
+      if (event.key === "Escape") closePdfModal();
+      if (event.key === "ArrowLeft" && state.currentPage > 1) {
+        await renderPage(state.currentPage - 1);
+      }
+      if (event.key === "ArrowRight" && state.pdfDoc && state.currentPage < state.pdfDoc.numPages) {
+        await renderPage(state.currentPage + 1);
+      }
+    });
+
+    window.addEventListener("resize", async () => {
+      if (modal.classList.contains("open") && state.pdfDoc) {
+        await renderPage(state.currentPage);
+      }
     });
 
     loadAllMeta();
